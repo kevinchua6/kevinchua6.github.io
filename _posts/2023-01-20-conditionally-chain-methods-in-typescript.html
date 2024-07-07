@@ -1,0 +1,11 @@
+---
+layout: post
+title: Conditionally Chain Methods in TypeScript
+canonical_url: https://kevinchua67.medium.com/conditionally-chain-methods-in-typescript-e396494bbdf5?source=rss-5e9610519e26------2
+tag:
+- typescript
+- method-chaining
+- abstraction
+---
+
+<figure><img alt="" src="https://cdn-images-1.medium.com/max/1024/0*hqHGKNJE3oYorUUc" /><figcaption>Photo by <a href="https://unsplash.com/@cdr6934?utm_source=medium&amp;utm_medium=referral">Chris Ried</a> on <a href="https://unsplash.com?utm_source=medium&amp;utm_medium=referral">Unsplash</a></figcaption></figure><p>I needed to dynamically create <a href="https://github.com/jquense/yup">yup </a>validations in TypeScript, which are accomplished by method chaining.</p><p>I only needed to chain .required in the case that requiredBool was true, as below:</p><pre>const x = number()<br>  .typeError(`age must be a number`)<br>  .required(`age is required`) // Only run if requiredBool is true</pre><p>The naive way to solve this that I don’t like would be:</p><pre>let x = number()<br>  .typeError(`age must be a number`)<br>if (requiredBool)<br>  x = x.required(`age is required`) // Only runs if requiredBool is true</pre><p>However, the above code does not follow the functional style and looks ugly for longer method chains, so I created an abstraction for this which you can define somewhere in your project to use:</p><pre>export const chainInit = &lt;InitialObject, TransformedObject&gt;(value: InitialObject) =&gt; {<br>  return {<br>    if(condition: boolean, thanF: (param: InitialObject) =&gt; TransformedObject, elseF?: (param: InitialObject) =&gt; TransformedObject) {<br>      return chainInit(condition ? thanF(value) : elseF ? elseF(value) : value);<br>    },<br>    chain(f: (param: InitialObject) =&gt; TransformedObject) {<br>      return chainInit(f(value));<br>    },<br>    finish() {<br>      return value;<br>    },<br>  };<br>};</pre><p>Thus, it becomes more functional and cleaner in my opinion:</p><pre>chainInit(number())<br>  .chain(scma =&gt; scma.typeError(`age must be a number`))<br>  .if(requiredBool, scma =&gt; scma.required(`age is required`))<br>  .finish();</pre><img src="https://medium.com/_/stat?event=post.clientViewed&referrerSource=full_rss&postId=e396494bbdf5" width="1" height="1" alt="">
